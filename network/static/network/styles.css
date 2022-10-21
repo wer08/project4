@@ -1,0 +1,24 @@
+
+#new_post_div
+{
+    padding: 10px;
+}
+#post_button
+{
+    margin-top: 10px;
+}
+
+body
+{
+    padding: 10px;
+}
+
+.post{
+    padding: 10px;
+    margin-bottom: 5px;
+}
+
+#timestamp
+{
+    color: lightgrey;
+}
