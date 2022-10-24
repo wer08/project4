@@ -2,16 +2,7 @@
 
 {% block body %}
 
-<h1>All Posts</h1>
-    <form method="POST" action="new_post">
-        {% csrf_token %}
-        <div class="form-group border" id="new_post_div">
-            <label for="new"><h3>New Post</h3></label>
-            <textarea id="new_post" placeholder="New Post" name="new" class="form-control" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary" id="post_button">Post</button>
-        </div>
-    </form>
-
+<h1>Posts from followed users</h1>
     {% for post in posts %}
         <div class="border post">
             <h5><a href = "{% url 'profile' post.author %}">{{post.author}}</a></h5>

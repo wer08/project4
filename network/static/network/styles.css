@@ -22,3 +22,11 @@ body
 {
     color: lightgrey;
 }
+
+#follow{
+    margin-bottom: 5px;
+}
+
+#unfollow{
+    margin-bottom: 5px;
+}

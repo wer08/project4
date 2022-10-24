@@ -1,0 +1,36 @@
+
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+    <h1>{{author.username}}</h1>
+
+    <span>Number of followers: {{ author.number_followers }}</span>
+
+    {% if user != author %}
+        <form action="follow/{{author.username}}" method="post">
+            {% csrf_token %}
+            {% if flag %}
+                <button id = "follow" type="submit" class="btn btn-primary"> Follow </button>
+            {% else %}
+                <button id = "unfollow" type="submit" class="btn btn-primary"> Unfollow </button>
+            {% endif %}
+        </form>
+    {% endif %}
+
+
+
+    {% for post in posts %}
+    <div class="border post">
+        <h5><a href = "{% url 'profile' post.author %}">{{post.author}}</a></h5>
+        <p>{{post.body}}</p>
+        <span id="timestamp">{{post.time_stamp}}</span><br>
+        <span id="likes"><i class="fa fa-thumbs-up"></i> {{post.likes}}</span>
+    </div>
+    {%endfor%}
+
+
+
+
+
+{% endblock %}

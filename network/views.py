@@ -1,13 +1,68 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
-from .models import User, Post
+from .models import Following, User, Post
+
+#view to render profile
+def profile(request,user):
+    flag = True
+    author = User.objects.get(username = user)
+    followings = request.user.followings.all()
+    for following in followings:
+        if following.followed == author:    
+            flag = False
+    followers = author.followers.count()
+    author.number_followers = followers
+    author.save()
+
+    posts = Post.objects.filter(author = author).order_by('-time_stamp')
+    return render(request, "network/profile.html", {
+        'posts':posts,
+        'author': author,
+        'flag': flag
+    })
+
+#view to follow and unfollow users
+def follow(request,user):
+    
+    flag = True
+    author = User.objects.get(username = user)
+    followings = request.user.followings.all()
+    for following in followings:
+        if following.followed == author:    
+            flag = False
+
+    if flag:
+        follow = Following(follower = request.user, followed = author)
+        follow.save()
+    else:
+        Following.objects.get(follower = request.user, followed = author).delete()
+
+    return HttpResponseRedirect(reverse("profile",kwargs={
+        'user': user
+    }))
+
+#view to render following page
+@login_required
+def following(request):
+    followed = request.user.followings.all().values_list('followed', flat=True)
+    
+    posts = Post.objects.filter(author__in=followed).order_by('-time_stamp')
+    pagin = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page_obj = pagin.get_page(page_number)
+    
+    return render(request, "network/following.html", {
+        'posts':page_obj,
+    })
 
 
+#view to add post
 def new_post(request):
     if request.method == "POST":
         body = request.POST["new"]
@@ -20,7 +75,7 @@ def new_post(request):
 
 
 
-
+#view to render main page
 def index(request):
     posts = Post.objects.order_by('-time_stamp')
     pagin = Paginator(posts, 10)
@@ -31,7 +86,7 @@ def index(request):
         'posts':page_obj,
     })
 
-
+#view to render login page with GET method and login user with POST method
 def login_view(request):
     if request.method == "POST":
 
@@ -51,12 +106,12 @@ def login_view(request):
     else:
         return render(request, "network/login.html")
 
-
+#view to logout user 
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
-
+#view to render register page with get method and register user with POST method
 def register(request):
     if request.method == "POST":
         username = request.POST["username"]
