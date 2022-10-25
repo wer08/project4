@@ -20,6 +20,15 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.author} {self.time_stamp}"
 
+    def serialize(self):
+        return {
+            "author": self.author.username,
+            "body": self.body,
+            "time_stamp": self.time_stamp,
+            "likes": self.likes,
+            "id": self.pk
+        }
+
 class Following(models.Model):
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followings')
     followed = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')

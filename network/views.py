@@ -5,8 +5,16 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django import forms
+import json
+
 
 from .models import Following, User, Post
+
+
+from django.views.decorators.csrf import csrf_protect
+
 
 #view to render profile
 def profile(request,user):
@@ -46,6 +54,23 @@ def follow(request,user):
     return HttpResponseRedirect(reverse("profile",kwargs={
         'user': user
     }))
+
+
+def posts(request):
+    
+    author = User.objects.get(username = request.user.username)
+    posts = Post.objects.filter(author = author).all()
+ 
+    return JsonResponse([post.serialize() for post in posts], safe=False)
+
+@csrf_protect
+def post(request,post_id):
+    post = Post.objects.get(pk = post_id)
+    if request.method == "PUT":
+        data = json.loads(request.body)
+        post.body = data['body']
+        post.save()
+        return HttpResponse(status=204)
 
 #view to render following page
 @login_required

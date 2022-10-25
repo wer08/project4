@@ -15,9 +15,18 @@
     {% for post in posts %}
         <div class="border post">
             <h5><a href = "{% url 'profile' post.author %}">{{post.author}}</a></h5>
-            <p>{{post.body}}</p>
+            <p class="post_body" id="body{{post.id}}">{{post.body}}</p>
+            <div class="new_body" id="new_body{{post.id}}">
+                <form>
+                    <textarea class="form-control" id="compose_body{{post.id}}" placeholder="Body"></textarea>
+                    <button id="save{{post.id}}">Save</button>
+                </form>
+            </div>
             <span id="timestamp">{{post.time_stamp}}</span><br>
             <span id="likes"><i class="fa fa-thumbs-up"></i> {{post.likes}}</span>
+            {% if post.author == user %}
+            <button class="btn btn-secondary" id={{post.id}} >Edit</button> 
+            {% endif %}
         </div>
     {%endfor%}
     <ul class="pagination">
