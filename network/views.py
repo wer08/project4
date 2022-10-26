@@ -55,22 +55,26 @@ def follow(request,user):
         'user': user
     }))
 
-
 def posts(request):
-    
-    author = User.objects.get(username = request.user.username)
-    posts = Post.objects.filter(author = author).all()
- 
+
+    posts = Post.objects.all()
+
+
     return JsonResponse([post.serialize() for post in posts], safe=False)
 
 @csrf_protect
 def post(request,post_id):
     post = Post.objects.get(pk = post_id)
     if request.method == "PUT":
-        data = json.loads(request.body)
-        post.body = data['body']
+        data = json.loads(request.body) 
+        if data['body']:
+            post.body = data['body']
+        elif data['likes']:
+            post.likes += 1
         post.save()
         return HttpResponse(status=204)
+    else:
+        return JsonResponse(post.serialize())
 
 #view to render following page
 @login_required
