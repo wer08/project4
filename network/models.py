@@ -11,6 +11,15 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    def serialize(self):
+        return{
+            "id": self.pk,
+            "username": self.username,
+        }
+
+   
+       
+
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.CharField(max_length = 1024)
@@ -18,7 +27,7 @@ class Post(models.Model):
     likes = models.PositiveIntegerField(default = 0)
 
     def __str__(self):
-        return f"{self.author} {self.time_stamp}"
+        return f"{self.author} {self.time_stamp} "
 
     def serialize(self):
         return {
@@ -28,6 +37,13 @@ class Post(models.Model):
             "likes": self.likes,
             "id": self.pk
         }
+    def simple_serialize(self):
+        return {
+            "author": self.author.username,
+            "likes": self.likes,
+            "id": self.pk
+        }
+
 
 class Following(models.Model):
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followings')
@@ -36,3 +52,16 @@ class Following(models.Model):
     def __str__(self):
         return f"{self.follower} follows {self.followed}"
 
+
+class Like(models.Model):
+    liker = models.ForeignKey(User, on_delete=models.CASCADE, related_name="liked")
+    liked_post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likers")
+
+    def __str__(self):
+        return f"{self.liker } liked {self.liked_post}" 
+
+    def serialize(self):
+        return{
+            "liker": self.liker.serialize(),
+            "liked_post": self.liked_post.simple_serialize()
+        }

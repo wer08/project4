@@ -32,19 +32,27 @@ document.addEventListener('DOMContentLoaded',function(){
 
 function likes(post)
 {
-    like_button = document.querySelector(`i[data-index="${post.id}"]`).addEventListener('click',add_like);
-    like_button.myParam = post;
+    like_button = document.querySelector(`i[data-index="${post.id}"]`);
+    if(like_button)
+    {
+        like_button.addEventListener('click',add_like);
+        like_button.myParam = post;
+    }
 }
 
 function add_like(evt)
 {
     post = evt.currentTarget.myParam;
+    liked = document.querySelector('#likes').value;
+    console.log(liked);
     const request = new Request(
         `/post/${post.id}`,
         {headers: {'X-CSRFToken': csrftoken}}
     );
     
-    number_of_likes = post.likes ++;
+    
+    number_of_likes = ++post.likes;
+    console.log(number_of_likes);
 
     fetch(request, {
         method: 'PUT',

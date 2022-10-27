@@ -1,3 +1,4 @@
+from crypt import methods
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
@@ -10,7 +11,7 @@ from django import forms
 import json
 
 
-from .models import Following, User, Post
+from .models import Following, User, Post, Like
 
 
 from django.views.decorators.csrf import csrf_protect
@@ -55,6 +56,26 @@ def follow(request,user):
         'user': user
     }))
 
+@login_required
+def like(request,post):
+    if request.method == 'POST':
+        
+        flag = True
+        post = Post.objects.get(pk = post)
+        print(f"test: {post.likers}")
+        likes = request.user.liked.all()
+        for like in likes:
+            if like.liked_post == post:    
+                flag = False
+
+        if flag:
+            like = Like(liker = request.user, liked_post = post)
+            like.save()
+        else:
+            Like.objects.get(liker = request.user, liked_post = post).delete()
+
+        return HttpResponse(status=204)
+
 def posts(request):
 
     posts = Post.objects.all()
@@ -67,10 +88,10 @@ def post(request,post_id):
     post = Post.objects.get(pk = post_id)
     if request.method == "PUT":
         data = json.loads(request.body) 
-        if data['body']:
+        if data.get("body") is not None:
             post.body = data['body']
-        elif data['likes']:
-            post.likes += 1
+        elif data.get("likes") is not None:
+            post.likes = data['likes']
         post.save()
         return HttpResponse(status=204)
     else:
@@ -106,13 +127,26 @@ def new_post(request):
 
 #view to render main page
 def index(request):
+
     posts = Post.objects.order_by('-time_stamp')
     pagin = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page_obj = pagin.get_page(page_number)
+    likers = []
+    for post in page_obj:
+        post_like = post.likers.all()
+        for like in post_like:
+            like = like.liker
+            likers.append(like)
+
+
+
+
+
     
     return render(request, "network/index.html", {
         'posts':page_obj,
+        'likers':likers
     })
 
 #view to render login page with GET method and login user with POST method
