@@ -58,23 +58,30 @@ def follow(request,user):
 
 @login_required
 def like(request,post):
-    if request.method == 'POST':
-        
-        flag = True
-        post = Post.objects.get(pk = post)
-        print(f"test: {post.likers}")
-        likes = request.user.liked.all()
-        for like in likes:
-            if like.liked_post == post:    
-                flag = False
-
-        if flag:
-            like = Like(liker = request.user, liked_post = post)
+    post = Post.objects.get(pk = post)
+    likes = Like.objects.all()
+    if request.method == "POST":
+        data = json.loads(request.body) 
+        liker_id = data['liker']
+        liker = User.objects.get(pk = liker_id)
+        like = Like(liker = liker, liked_post = post)
+        if not like in likes:
             like.save()
-        else:
-            Like.objects.get(liker = request.user, liked_post = post).delete()
-
         return HttpResponse(status=204)
+    else:
+        return JsonResponse(post.serialize())
+
+@login_required
+def unlike(request,post):
+    post = Post.objects.get(pk = post)
+    like = Like.objects.get(liked_post = post)
+    if request.method == "DELETE":
+        if like:
+            like.delete()
+            return HttpResponse(status=204)
+    else:
+        return JsonResponse(post.serialize())
+    
 
 def posts(request):
 
@@ -85,6 +92,7 @@ def posts(request):
 
 @csrf_protect
 def post(request,post_id):
+    print(post_id)
     post = Post.objects.get(pk = post_id)
     if request.method == "PUT":
         data = json.loads(request.body) 
@@ -133,20 +141,17 @@ def index(request):
     page_number = request.GET.get('page')
     page_obj = pagin.get_page(page_number)
     likers = []
-    for post in page_obj:
-        post_like = post.likers.all()
-        for like in post_like:
-            like = like.liker
-            likers.append(like)
-
-
-
-
-
+    for post in posts:
+        posts_like = list(post.likers.all())
+        liker = []
+        for post_like in posts_like:
+            liker.append(post_like.liker)
+        likers.append(liker)
+    post_dict = dict(zip(posts,likers))
     
     return render(request, "network/index.html", {
         'posts':page_obj,
-        'likers':likers
+        'dict': post_dict
     })
 
 #view to render login page with GET method and login user with POST method

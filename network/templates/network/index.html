@@ -1,8 +1,10 @@
 {% extends "network/layout.html" %}
+{% load network_extras %}
 
 
 
 {% block body %}
+
 
 <h1>All Posts</h1>
     {% if user.is_authenticated %}
@@ -27,18 +29,9 @@
                 </form>
             </div>
             <span id="timestamp">{{post.time_stamp}}</span><br>
-            <form action="{% url 'like' post.id %}" method="post">
-                {% csrf_token %}
-                {{likers}}
-                <button type="submit">
-                    {% if user in likers %}
-                    <i class="fa fa-thumbs-down" data-index={{post.id}}></i>
-                    {% else %}
-                    <i class="fa fa-thumbs-up" data-index={{post.id}}></i>
-                    {% endif %} 
-                </button>    
-                <span id="likes" data-index={{post.id}}>{{post.likes}}</span>
-            </form>
+            <i class="fa fa-thumbs-down" data-index={{post.id}} id="unlike"></i>
+            <i class="fa fa-thumbs-up" data-index={{post.id}} id="like"></i>
+            <span id="likes" data-index={{post.id}}>{{post.likes}}</span>
             {% if post.author == user %}
             <button class="btn btn-secondary" id={{post.id}} >Edit</button> 
             {% endif %}

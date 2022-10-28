@@ -15,9 +15,11 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
+
 document.addEventListener('DOMContentLoaded',function(){
     forms = document.querySelectorAll('.new_body');
     forms.forEach(form => form.style.display = 'none');
+    
     
 
     fetch(`posts`)
@@ -25,6 +27,7 @@ document.addEventListener('DOMContentLoaded',function(){
     .then(posts => { 
         posts.forEach(post => show_edit(post));
         posts.forEach(post => likes(post));
+        posts.forEach(post => unlike(post))
     }
     )
 });
@@ -32,7 +35,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
 function likes(post)
 {
-    like_button = document.querySelector(`i[data-index="${post.id}"]`);
+    like_button = document.querySelector(`#like[data-index="${post.id}"]`);
     if(like_button)
     {
         like_button.addEventListener('click',add_like);
@@ -40,28 +43,95 @@ function likes(post)
     }
 }
 
-function add_like(evt)
+function unlike(post)
 {
+    if (post.likes > 0)
+    {
+        unlike_button = document.querySelector(`#unlike[data-index="${post.id}"]`);
+        if(unlike_button)
+        {
+            unlike_button.addEventListener('click',remove_like);
+            unlike_button.myParam = post;
+        }
+    }
+  
+}
+
+
+function remove_like(evt)
+{
+    const user_id = JSON.parse(document.getElementById('user_id').textContent);
     post = evt.currentTarget.myParam;
-    liked = document.querySelector('#likes').value;
-    console.log(liked);
+    console.log(user_id);
+
     const request = new Request(
         `/post/${post.id}`,
         {headers: {'X-CSRFToken': csrftoken}}
     );
-    
-    
-    number_of_likes = ++post.likes;
-    console.log(number_of_likes);
 
-    fetch(request, {
-        method: 'PUT',
-        mode: 'same-origin',
-        body: JSON.stringify({
-            likes: number_of_likes
+    const request2 = new Request(
+        `/unlike/${post.id}`,
+        {headers: {'X-CSRFToken': csrftoken}}
+    );
+    
+    
+    number_of_likes = --post.likes;
+    Promise.all([
+        fetch(request, {
+            method: 'PUT',
+            mode: 'same-origin',
+            body: JSON.stringify({
+                likes: number_of_likes
+            })
+        }),
+        fetch(request2, {
+            method: 'DELETE'
         })
-    })
 
+    ])
+    
+    document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = number_of_likes;
+    evt.preventDefault();
+}
+
+
+function add_like(evt)
+{
+    const user_id = JSON.parse(document.getElementById('user_id').textContent);
+    post = evt.currentTarget.myParam;
+    
+    console.log(user_id);
+
+    const request = new Request(
+        `/post/${post.id}`,
+        {headers: {'X-CSRFToken': csrftoken}}
+    );
+
+    const request2 = new Request(
+        `/like/${post.id}`,
+        {headers: {'X-CSRFToken': csrftoken}}
+    );
+    
+    console.log(user_id);
+    number_of_likes = ++post.likes;
+    Promise.all([
+        fetch(request, {
+            method: 'PUT',
+            mode: 'same-origin',
+            body: JSON.stringify({
+                likes: number_of_likes
+            })
+        }),
+        fetch(request2, {
+            method: 'POST',
+            mode: 'same-origin',
+            body: JSON.stringify({
+                liker: user_id,
+            })
+        })
+
+    ])
+    
     document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = number_of_likes;
     evt.preventDefault();
 }
