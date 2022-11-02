@@ -17,24 +17,43 @@ const csrftoken = getCookie('csrftoken');
 
 
 document.addEventListener('DOMContentLoaded',function(){
+    
     forms = document.querySelectorAll('.new_body');
     forms.forEach(form => form.style.display = 'none');
     
-    
-
-    fetch(`posts`)
+    fetch(`/posts`)
     .then(response => response.json())
     .then(posts => { 
         posts.forEach(post => show_edit(post));
         posts.forEach(post => likes(post));
-        posts.forEach(post => unlike(post))
+        posts.forEach(post => unlike(post));
+        posts.forEach(post => flagging(post))
     }
     )
 });
 
+function flagging(post)
+{
+    flag = document.querySelector(`.flag[data-index="${post.id}"]`);
+    if(flag)
+        flag = flag.innerHTML;
+        console.log(flag);
+        if (flag == "liked")
+        {
+            document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'block';
+            document.querySelector(`#like[data-index="${post.id}"]`).style.display = 'none';
+        }
+        else if(flag == "not_liked")
+        {
+            document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'none';
+            document.querySelector(`#like[data-index="${post.id}"]`).style.display = 'block';
+        }
+}
+
 
 function likes(post)
 {
+    
     like_button = document.querySelector(`#like[data-index="${post.id}"]`);
     if(like_button)
     {
@@ -46,7 +65,8 @@ function likes(post)
 function unlike(post)
 {
     if (post.likes > 0)
-    {
+    {   
+
         unlike_button = document.querySelector(`#unlike[data-index="${post.id}"]`);
         if(unlike_button)
         {
@@ -60,79 +80,70 @@ function unlike(post)
 
 function remove_like(evt)
 {
+    console.log(`trying to delete`);
     const user_id = JSON.parse(document.getElementById('user_id').textContent);
     post = evt.currentTarget.myParam;
-    console.log(user_id);
 
-    const request = new Request(
-        `/post/${post.id}`,
-        {headers: {'X-CSRFToken': csrftoken}}
-    );
 
     const request2 = new Request(
         `/unlike/${post.id}`,
         {headers: {'X-CSRFToken': csrftoken}}
     );
-    
-    
-    number_of_likes = --post.likes;
-    Promise.all([
-        fetch(request, {
-            method: 'PUT',
-            mode: 'same-origin',
-            body: JSON.stringify({
-                likes: number_of_likes
-            })
-        }),
         fetch(request2, {
-            method: 'DELETE'
+            method: 'DELETE',
+            body: JSON.stringify({
+                liker: user_id,
+            })
         })
+        .then(() => 
+            fetch(`/post/${post.id}`)
+            .then(response => response.json())
+            .then(post => {
+                document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = post.likes;
+                document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'none';
+                document.querySelector(`#like[data-index="${post.id}"]`).style.display = 'block';
 
-    ])
+            })
+
+        )
+
     
-    document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = number_of_likes;
     evt.preventDefault();
 }
 
 
 function add_like(evt)
 {
+    console.log("trying to like");
     const user_id = JSON.parse(document.getElementById('user_id').textContent);
     post = evt.currentTarget.myParam;
     
     console.log(user_id);
 
-    const request = new Request(
-        `/post/${post.id}`,
-        {headers: {'X-CSRFToken': csrftoken}}
-    );
 
     const request2 = new Request(
         `/like/${post.id}`,
         {headers: {'X-CSRFToken': csrftoken}}
     );
-    
-    console.log(user_id);
-    number_of_likes = ++post.likes;
-    Promise.all([
-        fetch(request, {
-            method: 'PUT',
-            mode: 'same-origin',
-            body: JSON.stringify({
-                likes: number_of_likes
-            })
-        }),
+
         fetch(request2, {
             method: 'POST',
             mode: 'same-origin',
             body: JSON.stringify({
-                liker: user_id,
+            liker: user_id,
             })
         })
+        .then(() =>
+            fetch(`/post/${post.id}`)
+            .then(response => response.json())
+            .then(post => {
+                document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = post.likes;
+                document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'block';
+                document.querySelector(`#like[data-index="${post.id}"]`).style.display = 'none';
 
-    ])
-    
-    document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = number_of_likes;
+            })
+        )
+
     evt.preventDefault();
 }
 

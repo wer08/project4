@@ -30,3 +30,11 @@ body
 #unfollow{
     margin-bottom: 5px;
 }
+
+.fa{
+    color: blue;
+}
+
+.flag{
+    display: none;
+}
