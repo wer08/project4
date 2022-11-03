@@ -6,7 +6,9 @@
 {% block body %}
 
 
-<h1>All Posts</h1>
+
+<div class="container">
+    <h1>All Posts</h1>
     {% if user.is_authenticated %}
     <form method="POST" action="new_post">
         {% csrf_token %}
@@ -17,31 +19,36 @@
         </div>
     </form>
     {% endif %}
-
-    {% for post in posts %}
-        <div class="border rounded post">
-            <h5><a href = "{% url 'profile' post.author %}">{{post.author}}</a></h5>
-            <p class="post_body" id="body{{post.id}}">{{post.body}}</p>
-            <div class="new_body" id="new_body{{post.id}}">
-                <form>
-                    <textarea class="form-control" id="compose_body{{post.id}}" placeholder="Body"></textarea>
-                    <button id="save{{post.id}}" class="btn btn-primary">Save</button>
-                </form>
+    
+        {% for post in posts %}
+            <div class="border rounded post">
+                <h5><a href = "{% url 'profile' post.author %}" class="link-secondary">{{post.author}}</a></h5>
+                {% if post.author == user %}
+                <button class="btn btn-secondary" id={{post.id}} >Edit</button> 
+                {% endif %}
+                <p class="post_body" id="body{{post.id}}">{{post.body}}</p>
+                <div class="new_body" id="new_body{{post.id}}">
+                    <form>
+                        <textarea class="form-control" id="compose_body{{post.id}}" placeholder="Body"></textarea>
+                        <button id="save{{post.id}}" class="btn btn-primary">Save</button>
+                    </form>
+                </div>
+                <span id="timestamp">{{post.time_stamp}}</span><br>
+                <i class="fa-regular fa-thumbs-up"></i><span id="likes" data-index={{post.id}}>{{post.likes}}</span>
+                {% if post in liked_posts %}
+                <div class="flag" data-index={{post.id}}>liked</div>
+                {% else %}
+                <div class="flag" data-index={{post.id}}>not_liked</div>
+                {% endif %}
+                <div class="border-top like_div">
+                    <button  data-index={{post.id}} id="unlike" class="btn btn-outline-secondary"><i class="fa fa-thumbs-down"></i> Unlike </button>
+                    <button  data-index={{post.id}} id="like" class="btn btn-outline-secondary"><i class="fa fa-thumbs-up"></i> Like it! </button>
+                </div>
+                
+               
             </div>
-            <span id="timestamp">{{post.time_stamp}}</span><br>
-            {% if post in liked_posts %}
-            <div class="flag" data-index={{post.id}}>liked</div>
-            {% else %}
-            <div class="flag" data-index={{post.id}}>not_liked</div>
-            {% endif %}
-            <i class="fa fa-thumbs-down" data-index={{post.id}} id="unlike"></i>
-            <i class="fa fa-thumbs-up" data-index={{post.id}} id="like"></i>
-            <span id="likes" data-index={{post.id}}>{{post.likes}}</span>
-            {% if post.author == user %}
-            <button class="btn btn-secondary" id={{post.id}} >Edit</button> 
-            {% endif %}
-        </div>
-    {%endfor%}
+        {%endfor%}
+    </div>
     <ul class="pagination">
         {% if posts.has_previous %}
         <li class="page-item"><a class="page-link" href="?page={{ posts.previous_page_number }}">Previous</a></li>

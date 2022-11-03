@@ -21,7 +21,7 @@ from network import models
 
 #view to render profile
 def profile(request,user):
-    print(user)
+    
     flag = True
     author = User.objects.get(username = user)
     followings = request.user.followings.all()
@@ -37,10 +37,18 @@ def profile(request,user):
     pagin = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page_obj = pagin.get_page(page_number)
+
+    user = request.user
+    liked = Like.objects.filter(liker = user)
+    liked_posts = []
+    for like in liked:
+        liked_posts.append(like.liked_post)
+
     return render(request, "network/profile.html", {
         'posts':page_obj,
         'author': author,
-        'flag': flag
+        'flag': flag,
+        'liked_posts': liked_posts
     })
 
 #view to follow and unfollow users
@@ -77,16 +85,11 @@ def post(request,post_id):
 
     if request.method == "PUT":
 
-        data = json.loads(request.body) 
-        if data.get("body") is not None:
-            post.body = data['body']
-        elif data.get("likes") is not None:
-            liker_id = data['liker']
-            liker = User.objects.get(pk = liker_id)
-            if not liker in likers: 
-                print("no liker")
-                post.likes = data['likes']
-        post.save()
+        data = json.loads(request.body)
+        if request.user is post.author:
+            if data.get("body") is not None:
+                post.body = data['body']
+            post.save()
         return HttpResponse(status=204)
     else:
         return JsonResponse(post.serialize())
@@ -96,7 +99,6 @@ def like(request,post):
     post = Post.objects.get(pk = post)
     if request.method == "POST":
         likers_likes = post.likers.all()
-        print(likers_likes)
         likers = []
         for like in likers_likes:
             liker = like.liker
@@ -131,7 +133,6 @@ def unlike(request,post):
             post.save()
             return HttpResponse(status=204)
         except models.Like.DoesNotExist:
-            print("cant'unlike")
             return HttpResponse(status=400)
             
     else:
@@ -147,9 +148,16 @@ def following(request):
     pagin = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page_obj = pagin.get_page(page_number)
+
+    user = request.user
+    liked = Like.objects.filter(liker = user)
+    liked_posts = []
+    for like in liked:
+        liked_posts.append(like.liked_post)
     
     return render(request, "network/following.html", {
         'posts':page_obj,
+        'liked_posts':liked_posts
     })
 
 
@@ -174,10 +182,13 @@ def index(request):
     page_number = request.GET.get('page')
     page_obj = pagin.get_page(page_number)
     user = request.user
-    liked = Like.objects.filter(liker = user)
-    liked_posts = []
-    for like in liked:
-        liked_posts.append(like.liked_post)
+    try:
+        liked = Like.objects.filter(liker = user)
+        liked_posts = []
+        for like in liked:
+            liked_posts.append(like.liked_post)
+    except(TypeError):
+        liked_posts = []
     
     return render(request, "network/index.html", {
         'posts':page_obj,

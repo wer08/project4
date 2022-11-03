@@ -37,7 +37,6 @@ function flagging(post)
     flag = document.querySelector(`.flag[data-index="${post.id}"]`);
     if(flag)
         flag = flag.innerHTML;
-        console.log(flag);
         if (flag == "liked")
         {
             document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'block';
@@ -80,7 +79,6 @@ function unlike(post)
 
 function remove_like(evt)
 {
-    console.log(`trying to delete`);
     const user_id = JSON.parse(document.getElementById('user_id').textContent);
     post = evt.currentTarget.myParam;
 
@@ -99,7 +97,7 @@ function remove_like(evt)
             fetch(`/post/${post.id}`)
             .then(response => response.json())
             .then(post => {
-                document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = post.likes;
+                document.querySelector(`span[data-index = "${post.id}"]`).textContent = post.likes;
                 document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'none';
                 document.querySelector(`#like[data-index="${post.id}"]`).style.display = 'block';
 
@@ -114,13 +112,9 @@ function remove_like(evt)
 
 function add_like(evt)
 {
-    console.log("trying to like");
     const user_id = JSON.parse(document.getElementById('user_id').textContent);
     post = evt.currentTarget.myParam;
     
-    console.log(user_id);
-
-
     const request2 = new Request(
         `/like/${post.id}`,
         {headers: {'X-CSRFToken': csrftoken}}
@@ -137,7 +131,7 @@ function add_like(evt)
             fetch(`/post/${post.id}`)
             .then(response => response.json())
             .then(post => {
-                document.querySelector(`span[data-index = "${post.id}"]`).innerHTML = post.likes;
+                document.querySelector(`span[data-index = "${post.id}"]`).textContent = post.likes;
                 document.querySelector(`#unlike[data-index="${post.id}"]`).style.display = 'block';
                 document.querySelector(`#like[data-index="${post.id}"]`).style.display = 'none';
 
@@ -173,11 +167,9 @@ function save(evt)
     
 function saving(evt)
     
-{
-        
+{      
     post = evt.currentTarget.myParam;
     new_body = document.querySelector(`#compose_body${post.id}`).value;
-    console.log(`new body: ${new_body}`);
 
     const request = new Request(
         `/post/${post.id}`,
@@ -188,7 +180,7 @@ function saving(evt)
         method: 'PUT',
         mode: 'same-origin',
         body: JSON.stringify({
-            body: new_body
+            body: new_body,
         })
     })
     body = document.getElementById(`body${post.id}`);
